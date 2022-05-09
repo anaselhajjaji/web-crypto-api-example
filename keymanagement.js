@@ -90,6 +90,75 @@ document.addEventListener("DOMContentLoaded", function() {
             usages
         ).
         then(function(keyPair) {
+            
+            // ANAS TESTS START
+
+            if (!("TextEncoder" in window)) 
+                alert("Sorry, this browser does not support TextEncoder...");
+
+            var enc = new TextEncoder(); // always utf-8
+            
+            // SIGN
+            window.crypto.subtle.sign(
+                {
+                    name: "RSASSA-PKCS1-v1_5",
+                },
+                keyPair.privateKey, //from generateKey or importKey above
+                enc.encode("ANAS EL HAJJAJI") //ArrayBuffer of data you want to sign
+            )
+            .then(function(signature){
+                //returns an ArrayBuffer containing the signature
+                console.log(new Uint8Array(signature));
+
+                // VERIFY SIGNATURE
+                window.crypto.subtle.verify(
+                    {
+                        name: "RSASSA-PKCS1-v1_5",
+                    },
+                    keyPair.publicKey, //from generateKey or importKey above
+                    signature, //ArrayBuffer of the signature
+                    enc.encode("ANAS EL HAJJAJI") //ArrayBuffer of the data
+                )
+                .then(function(isvalid){
+                    //returns a boolean on whether the signature is true or not
+                    console.log(isvalid);
+                })
+                .catch(function(err){
+                    console.error(err);
+                });
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+
+            // EXPORT KEY
+            console.log('Exporting public key');
+            window.crypto.subtle.exportKey(
+                "spki", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+                keyPair.publicKey //can be a publicKey or privateKey, as long as extractable was true
+            )
+            .then(function(keydata){
+                //returns the exported key data
+                console.log(keydata);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+            console.log('Exporting private key');
+            window.crypto.subtle.exportKey(
+                "pkcs8", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+                keyPair.privateKey //can be a publicKey or privateKey, as long as extractable was true
+            )
+            .then(function(keydata){
+                //returns the exported key data
+                console.log(keydata);
+            })
+            .catch(function(err){
+                console.error(err);
+            });
+
+            // ANAS TESTS END
+
             return keyStore.saveKey(keyPair.publicKey, keyPair.privateKey, name);
         }).
         then(addToKeyList).
